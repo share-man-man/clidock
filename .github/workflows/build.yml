@@ -9,4 +9,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: brew install xcodegen
       - run: xcodegen generate
-      - run: xcodebuild -project Clidock.xcodeproj -scheme Clidock -destination 'platform=macOS' test
+      - run: xcodebuild -project Popback.xcodeproj -scheme Popback -destination 'platform=macOS' test

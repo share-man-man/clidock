@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: brew install xcodegen
       - run: xcodegen generate
-      - run: xcodebuild -project Clidock.xcodeproj -scheme Clidock -destination 'platform=macOS' test
+      - run: xcodebuild -project Popback.xcodeproj -scheme Popback -destination 'platform=macOS' test
       - name: Detect signing configuration
         id: signing
         shell: bash
@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          keychain="$RUNNER_TEMP/clidock.keychain-db"
+          keychain="$RUNNER_TEMP/popback.keychain-db"
           password=$(openssl rand -hex 24)
           security create-keychain -p "$password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
@@ -54,12 +54,12 @@ jobs:
           printf '%s' "$CERTIFICATE" | base64 -D > "$RUNNER_TEMP/identity.p12"
           security import "$RUNNER_TEMP/identity.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
-          xcrun notarytool store-credentials clidock-release --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD"
+          xcrun notarytool store-credentials popback-release --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD"
       - name: Build, sign and notarize
         if: steps.signing.outputs.enabled == 'true'
         env:
           DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
-          NOTARY_PROFILE: clidock-release
+          NOTARY_PROFILE: popback-release
           RELEASE_TAG: ${{ github.ref_name }}
         run: scripts/package-dmg.sh --release
       - name: Build ad-hoc DMG
@@ -75,12 +75,12 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$SIGNED" == "true" ]]; then
-            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Clidock ${RELEASE_TAG#v}"
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Popback ${RELEASE_TAG#v}"
           else
-            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Clidock ${RELEASE_TAG#v}" --notes "> **Note:** This build is ad-hoc signed and not notarized with an Apple Developer ID. If macOS blocks opening it, run \`xattr -cr /Applications/Clidock.app\` after dragging it to Applications."
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Popback ${RELEASE_TAG#v}" --notes "> **Note:** This build is ad-hoc signed and not notarized with an Apple Developer ID. If macOS blocks opening it, run \`xattr -cr /Applications/Popback.app\` after dragging it to Applications."
           fi
       - name: Remove credentials
         if: always() && steps.signing.outputs.enabled == 'true'
         run: |
           rm -f "$RUNNER_TEMP/identity.p12"
-          security delete-keychain "$RUNNER_TEMP/clidock.keychain-db" || true
+          security delete-keychain "$RUNNER_TEMP/popback.keychain-db" || true

@@ -24,7 +24,7 @@ esac
 # Build both architectures with the same source and the package version in project.yml.
 xcodegen generate
 derived="$PWD/build/DerivedData"
-xcodebuild -project Clidock.xcodeproj -scheme Clidock -configuration Release \
+xcodebuild -project Popback.xcodeproj -scheme Popback -configuration Release \
     -destination 'generic/platform=macOS' -derivedDataPath "$derived" \
     'ARCHS=arm64 x86_64' ONLY_ACTIVE_ARCH=NO build
 mkdir -p dist
@@ -32,17 +32,17 @@ scratch=$(mktemp -d "$PWD/build/package.XXXXXX")
 trap 'rm -rf "$scratch"' EXIT
 stage="$scratch/image"
 mkdir "$stage"
-app="$stage/Clidock.app"
-ditto "$derived/Build/Products/Release/Clidock.app" "$app"
+app="$stage/Popback.app"
+ditto "$derived/Build/Products/Release/Popback.app" "$app"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Contents/Info.plist")
-lipo "$app/Contents/MacOS/Clidock" -verify_arch arm64 x86_64
+lipo "$app/Contents/MacOS/Popback" -verify_arch arm64 x86_64
 
 # Notarize the app as well as its carrier so the installed app keeps an offline ticket.
 if [[ "$mode" == "--release" || "$mode" == "--release-unsigned" ]]; then
     [[ "$RELEASE_TAG" == "v$version" ]] || { echo "Tag does not match the app version" >&2; exit 1; }
-    name="Clidock-$version"
+    name="Popback-$version"
 else
-    name="Clidock-$version-local"
+    name="Popback-$version-local"
 fi
 if [[ "$mode" == "--release" ]]; then
     codesign --force --timestamp --options runtime --sign "$DEVELOPER_ID" "$app"
@@ -55,7 +55,7 @@ fi
 codesign --verify --deep --strict "$app"
 ln -s /Applications "$stage/Applications"
 dmg="$scratch/$name.dmg"
-hdiutil create -volname Clidock -srcfolder "$stage" -format UDZO "$dmg"
+hdiutil create -volname Popback -srcfolder "$stage" -format UDZO "$dmg"
 if [[ "$mode" == "--release" ]]; then
     codesign --timestamp --sign "$DEVELOPER_ID" "$dmg"
     xcrun notarytool submit "$dmg" --keychain-profile "$NOTARY_PROFILE" --wait

@@ -1,4 +1,4 @@
-// Modified for Clidock on 2026-11-27. SPDX-License-Identifier: GPL-3.0-only
+// Modified for Popback on 2026-11-27. SPDX-License-Identifier: GPL-3.0-only
 import AppKit
 import XCTest
 
@@ -12,7 +12,7 @@ final class ClipQueuePasteboardTests: XCTestCase {
     private var keyboard = ClipQueuePasteboard.Keyboard(lastKeyDown: .distantPast, commandHeld: false)
 
     override func setUp() async throws {
-        pasteboard = NSPasteboard(name: .init("io.github.share-man-man.clidockTests.queue.\(UUID().uuidString)"))
+        pasteboard = NSPasteboard(name: .init("io.github.share-man-man.popbackTests.queue.\(UUID().uuidString)"))
         board = ClipQueuePasteboard(pasteboard: pasteboard)
         pastes = 0
         replaces = 0

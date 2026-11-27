@@ -1,4 +1,4 @@
-name: Clidock
+name: Popback
 options:
   deploymentTarget:
     macOS: "14.0"
@@ -19,91 +19,91 @@ packages:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     exactVersion: "3.1.0"
 targets:
-  Clidock:
+  Popback:
     type: application
     platform: macOS
     sources:
-      - Clidock
+      - Popback
       - path: LICENSE
         buildPhase: resources
       - path: Licenses/KeyboardShortcuts.txt
         buildPhase: resources
     settings:
       base:
-        CLIDOCK_BASE_IDENTIFIER: io.github.share-man-man.clidock
-        PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER)
-        PRODUCT_MODULE_NAME: Clidock
-        CLIDOCK_URL_SCHEME: clidock
-        CLIDOCK_MENU_BADGE: ""
-        CLIDOCK_MENU_BANNER: ""
-        INFOPLIST_FILE: Clidock/Info.plist
+        POPBACK_BASE_IDENTIFIER: io.github.share-man-man.popback
+        PRODUCT_BUNDLE_IDENTIFIER: $(POPBACK_BASE_IDENTIFIER)
+        PRODUCT_MODULE_NAME: Popback
+        POPBACK_URL_SCHEME: popback
+        POPBACK_MENU_BADGE: ""
+        POPBACK_MENU_BANNER: ""
+        INFOPLIST_FILE: Popback/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: YES
         CODE_SIGN_IDENTITY: "-"
       configs:
         Debug:
-          PRODUCT_NAME: ClidockDev
-          PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER).dev
-          CLIDOCK_URL_SCHEME: clidock-dev
-          CLIDOCK_MENU_BADGE: DEV
-          CLIDOCK_MENU_BANNER: "$(PRODUCT_NAME) · $(CLIDOCK_MENU_BADGE)"
+          PRODUCT_NAME: PopbackDev
+          PRODUCT_BUNDLE_IDENTIFIER: $(POPBACK_BASE_IDENTIFIER).dev
+          POPBACK_URL_SCHEME: popback-dev
+          POPBACK_MENU_BADGE: DEV
+          POPBACK_MENU_BANNER: "$(PRODUCT_NAME) · $(POPBACK_MENU_BADGE)"
         Local:
-          PRODUCT_NAME: ClidockLocal
-          PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER).local
-          CLIDOCK_URL_SCHEME: clidock-local
-          CLIDOCK_MENU_BANNER: "$(PRODUCT_NAME) · LOCAL"
+          PRODUCT_NAME: PopbackLocal
+          PRODUCT_BUNDLE_IDENTIFIER: $(POPBACK_BASE_IDENTIFIER).local
+          POPBACK_URL_SCHEME: popback-local
+          POPBACK_MENU_BANNER: "$(PRODUCT_NAME) · LOCAL"
     dependencies:
       - package: KeyboardShortcuts
-  ClidockTests:
+  PopbackTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: Tests
-      - path: Clidock/Utilities/CardColors.swift
-      - path: Clidock/Utilities/DesignTokens.swift
-      - path: Clidock/Utilities/PanelTabShortcut.swift
-      - path: Clidock/Utilities/WheelScrollTranslation.swift
-      - path: Clidock/Panel/PanelContentContainer.swift
-      - path: Clidock/Utilities/PasteKeyCode.swift
-      - path: Clidock/Utilities/ClipQueueList.swift
-      - path: Clidock/Services/ContentTypeClassifier.swift
-      - path: Clidock/Models/FileClip.swift
-      - path: Clidock/Utilities/FileImageThumbnail.swift
-      - path: Clidock/Services/PasteService.swift
-      - path: Clidock/SearchState.swift
-      - path: Clidock/Services/ClipQueuePasteboard.swift
-      - path: Clidock/Utilities/OwnPasteboardWrite.swift
-      - path: Clidock/Utilities/ClipQueueWindowGeometry.swift
-      - path: Clidock/Utilities/RepeatedPressFilter.swift
-      - path: Clidock/Utilities/HistoryRetention.swift
-      - path: Clidock/Utilities/ListDragAutoScroll.swift
-      - path: Clidock/Utilities/PointerDrag.swift
-      - path: Clidock/Utilities/URLCommand.swift
-      - path: Clidock/Utilities/Bundle+BuildInfo.swift
-      - path: Clidock/Services/ClipUndoStack.swift
-      - path: Clidock/Models/ClipboardItem.swift
-      - path: Clidock/Models/Pinboard.swift
-      - path: Clidock/Models/PinboardEntry.swift
-      - path: Clidock/Models/ContentType.swift
-      - path: Clidock/AppIdentity.swift
-      - path: Clidock/Models/ExcludedApp.swift
-      - path: Clidock/Utilities/Logger+Clidock.swift
-      - path: Clidock/Services/StoreManager.swift
-      - path: Clidock/Services/TransferService.swift
+      - path: Popback/Utilities/CardColors.swift
+      - path: Popback/Utilities/DesignTokens.swift
+      - path: Popback/Utilities/PanelTabShortcut.swift
+      - path: Popback/Utilities/WheelScrollTranslation.swift
+      - path: Popback/Panel/PanelContentContainer.swift
+      - path: Popback/Utilities/PasteKeyCode.swift
+      - path: Popback/Utilities/ClipQueueList.swift
+      - path: Popback/Services/ContentTypeClassifier.swift
+      - path: Popback/Models/FileClip.swift
+      - path: Popback/Utilities/FileImageThumbnail.swift
+      - path: Popback/Services/PasteService.swift
+      - path: Popback/SearchState.swift
+      - path: Popback/Services/ClipQueuePasteboard.swift
+      - path: Popback/Utilities/OwnPasteboardWrite.swift
+      - path: Popback/Utilities/ClipQueueWindowGeometry.swift
+      - path: Popback/Utilities/RepeatedPressFilter.swift
+      - path: Popback/Utilities/HistoryRetention.swift
+      - path: Popback/Utilities/ListDragAutoScroll.swift
+      - path: Popback/Utilities/PointerDrag.swift
+      - path: Popback/Utilities/URLCommand.swift
+      - path: Popback/Utilities/Bundle+BuildInfo.swift
+      - path: Popback/Services/ClipUndoStack.swift
+      - path: Popback/Models/ClipboardItem.swift
+      - path: Popback/Models/Pinboard.swift
+      - path: Popback/Models/PinboardEntry.swift
+      - path: Popback/Models/ContentType.swift
+      - path: Popback/AppIdentity.swift
+      - path: Popback/Models/ExcludedApp.swift
+      - path: Popback/Utilities/Logger+Popback.swift
+      - path: Popback/Services/StoreManager.swift
+      - path: Popback/Services/TransferService.swift
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.github.share-man-man.clidock.tests
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.share-man-man.popback.tests
         GENERATE_INFOPLIST_FILE: YES
 schemes:
-  Clidock:
+  Popback:
     build:
       targets:
-        Clidock: all
+        Popback: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - ClidockTests
+        - PopbackTests
     archive:
       config: Release

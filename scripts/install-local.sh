@@ -6,10 +6,10 @@ cd "$(dirname "$0")/.."
 derived="$PWD/build/DerivedData"
 configuration=Local
 xcodegen generate
-xcodebuild -project Clidock.xcodeproj -scheme Clidock -configuration "$configuration" \
+xcodebuild -project Popback.xcodeproj -scheme Popback -configuration "$configuration" \
     -destination 'platform=macOS' -derivedDataPath "$derived" build
 
-app_name=ClidockLocal
+app_name=PopbackLocal
 built="$derived/Build/Products/$configuration/$app_name.app"
 installed="/Applications/$app_name.app"
 

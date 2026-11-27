@@ -1,11 +1,11 @@
 <h1 align="center">
-  <img src="docs/images/wordmark.svg" width="160" alt="Clidock">
+  <img src="docs/images/wordmark.svg" width="172" alt="Popback">
 </h1>
 
 <p align="center">在 Mac 本地找回复制过的内容，用剪贴队列依次粘贴。</p>
 
 <p align="center">
-  <strong><a href="https://github.com/share-man-man/clidock/releases/latest">下载 macOS 版</a></strong> · macOS 14+
+  <strong><a href="https://github.com/share-man-man/popback/releases/latest">下载 macOS 版</a></strong> · macOS 14+
 </p>
 
 ---

@@ -1,14 +1,14 @@
-# 发布 Clidock
+# 发布 Popback
 
 ## 本地验收
 
-日常自用运行 `scripts/install-local.sh`，以 Local 配置构建并启动 `/Applications/ClidockLocal.app`。
+日常自用运行 `scripts/install-local.sh`，以 Local 配置构建并启动 `/Applications/PopbackLocal.app`。
 
-验收 DMG 时运行 `scripts/package-dmg.sh --local`。脚本以 Release 配置构建 `Clidock.app`，验证两个 CPU 架构及代码签名，再生成本地 DMG 和校验文件。文件名带 `-local` 表示镜像使用本机临时签名。
+验收 DMG 时运行 `scripts/package-dmg.sh --local`。脚本以 Release 配置构建 `Popback.app`，验证两个 CPU 架构及代码签名，再生成本地 DMG 和校验文件。文件名带 `-local` 表示镜像使用本机临时签名。
 
 在干净的 macOS 用户账户中打开 DMG，把应用拖到「应用程序」，逐项验收。
 
-- 首次启动显示 Clidock 图标和欢迎窗口，历史为空。在其他应用复制文本、富文本和图片，打开面板并手动粘贴。
+- 首次启动显示 Popback 图标和欢迎窗口，历史为空。在其他应用复制文本、富文本和图片，打开面板并手动粘贴。
 - 在 Finder 一次复制两个文件。用 Finder 来源筛选找到该记录，再粘贴到另一目录，核对文件数量和顺序。
 - 切换桌面和显示器，用快捷键打开面板。预览卡片，编辑文本，把两条记录拖入钉板并排序。
 - 启动剪贴队列，复制多条记录，连续粘贴并核对顺序。主动启用直接粘贴后授予辅助功能权限，核对焦点仍回到原应用。
@@ -31,9 +31,9 @@
 4. 从 Release 下载这三个文件，在同一目录运行下列命令，核对下载内容与公证票据，然后按本页的本地验收步骤安装。
 
 ```sh
-shasum -a 256 -c Clidock-0.1.0.sha256
-xcrun stapler validate Clidock-0.1.0.dmg
-spctl --assess --type open --context context:primary-signature Clidock-0.1.0.dmg
+shasum -a 256 -c Popback-0.1.0.sha256
+xcrun stapler validate Popback-0.1.0.dmg
+spctl --assess --type open --context context:primary-signature Popback-0.1.0.dmg
 ```
 
 源码包来自发布标签，并在 `Dependencies/KeyboardShortcuts/` 附带本次构建使用的依赖源码和许可证。离线构建时将 `project.yml` 的 `packages.KeyboardShortcuts` 配置替换为 `path: Dependencies/KeyboardShortcuts`，再生成工程。

@@ -30,7 +30,7 @@ final class LibraryBackupTests: XCTestCase {
         let data = try TransferService.exportDocument(context: source.mainContext)
         // Existing 0.1.0 archives and all three app variants use this wire-format identifier.
         XCTAssertEqual(try JSONDecoder().decode(TransferDocument.self, from: data).format,
-                       "io.github.share-man-man.clidock.backup")
+                       "io.github.share-man-man.popback.backup")
         /// Empty destination with independent object and relationship storage.
         let target = try library()
         /// Result of the first restore.
@@ -103,7 +103,7 @@ final class LibraryBackupTests: XCTestCase {
         let other = root.appending(component: "default.store")
         try Data("unrelated".utf8).write(to: other)
         XCTAssertEqual(StoreManager.resolveStoreURL(in: root).path,
-                       root.appending(path: "\(AppIdentity.namespace)/Clidock.store").path)
+                       root.appending(path: "\(AppIdentity.namespace)/Popback.store").path)
         XCTAssertEqual(try Data(contentsOf: other), Data("unrelated".utf8))
     }
 }
