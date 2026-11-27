@@ -12,7 +12,28 @@ jobs:
       - run: brew install xcodegen
       - run: xcodegen generate
       - run: xcodebuild -project Clidock.xcodeproj -scheme Clidock -destination 'platform=macOS' test
+      - name: Detect signing configuration
+        id: signing
+        shell: bash
+        env:
+          CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$CERTIFICATE" && -n "$CERTIFICATE_PASSWORD" && -n "$DEVELOPER_ID" && -n "$APPLE_ID" && -n "$APPLE_TEAM_ID" && -n "$APPLE_PASSWORD" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif [[ -z "$CERTIFICATE$CERTIFICATE_PASSWORD$DEVELOPER_ID$APPLE_ID$APPLE_TEAM_ID$APPLE_PASSWORD" ]]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Partial Apple signing secrets configured; set all six secrets or none." >&2
+            exit 1
+          fi
       - name: Prepare release credentials
+        if: steps.signing.outputs.enabled == 'true'
         shell: bash
         env:
           CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
@@ -35,18 +56,31 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
           xcrun notarytool store-credentials clidock-release --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD"
       - name: Build, sign and notarize
+        if: steps.signing.outputs.enabled == 'true'
         env:
           DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
           NOTARY_PROFILE: clidock-release
           RELEASE_TAG: ${{ github.ref_name }}
         run: scripts/package-dmg.sh --release
+      - name: Build ad-hoc DMG
+        if: steps.signing.outputs.enabled == 'false'
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: scripts/package-dmg.sh --release-unsigned
       - name: Publish verified assets
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Clidock ${RELEASE_TAG#v}"
+          SIGNED: ${{ steps.signing.outputs.enabled }}
+        run: |
+          set -euo pipefail
+          if [[ "$SIGNED" == "true" ]]; then
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Clidock ${RELEASE_TAG#v}"
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "Clidock ${RELEASE_TAG#v}" --notes "> **Note:** This build is ad-hoc signed and not notarized with an Apple Developer ID. If macOS blocks opening it, run \`xattr -cr /Applications/Clidock.app\` after dragging it to Applications."
+          fi
       - name: Remove credentials
-        if: always()
+        if: always() && steps.signing.outputs.enabled == 'true'
         run: |
           rm -f "$RUNNER_TEMP/identity.p12"
           security delete-keychain "$RUNNER_TEMP/clidock.keychain-db" || true

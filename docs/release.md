@@ -16,7 +16,7 @@
 
 ## 正式版本
 
-在 GitHub 仓库的 Actions secrets 配置本项目的 Apple 凭据。
+如已加入 Apple Developer Program，可在 GitHub 仓库的 Actions secrets 配置下列 6 项凭据以自动完成 Developer ID 签名与 Apple 公证；**未配置任何凭据时，发布任务会自动回退为免费 ad-hoc 签名打包**并在 Release 说明顶部提示去除隔离属性的命令（若只配置了部分凭据，流水线会直接报错，避免误发未签名版本）。
 
 | Secret | 值 |
 | --- | --- |
