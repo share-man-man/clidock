@@ -69,6 +69,7 @@
           </g>
           <circle cx="512" cy="772" r="14" fill="#FFFFFF" fill-opacity="0.92"/>
           <path d="M 304 66 L 720 66 C 868.5 66, 958 155.5, 958 304 L 958 720 C 958 868.5, 868.5 958, 720 958 L 304 958 C 155.5 958, 66 868.5, 66 720 L 66 304 C 66 155.5, 155.5 66, 304 66 Z" stroke="#FFFFFF" stroke-opacity="0.88" stroke-width="4"/>
+          <path d="M 304 72 L 720 72 C 865.5 72, 952 158.5, 952 304 L 952 720 C 952 865.5, 865.5 952, 720 952 L 304 952 C 158.5 952, 72 865.5, 72 720 L 72 304 C 72 158.5, 158.5 72, 304 72 Z" stroke="#0F172A" stroke-opacity="0.10" stroke-width="16"/>
         </g>
       </svg>
       <text x="40" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="700">Clidock</text>
