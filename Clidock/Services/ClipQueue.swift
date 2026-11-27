@@ -1,0 +1,166 @@
+// Modified for Clidock on 2026-11-27. SPDX-License-Identifier: GPL-3.0-only
+import AppKit
+
+/// Clip Queue: while it is on, every copy joins the queue, and each ⌘V the
+/// user presses pastes the next one in order (#9).
+///
+/// The item due next is always what sits on the clipboard, put there with its
+/// data promised rather than written. When another app pastes, it asks for the
+/// data, and that request is the signal to line up the following item. This
+/// needs no permission, unlike watching the keyboard for ⌘V (App Review
+/// rejected that under guideline 2.4.5). A request that didn't come with a
+/// paste shortcut puts the same item back instead (see `ClipQueuePasteboard`).
+@MainActor
+@Observable
+final class ClipQueue {
+    private(set) var isActive = false
+    private(set) var list = ClipQueueList<ClipboardItem>()
+
+    var pastesNewestFirst: Bool {
+        get { list.pastesNewestFirst }
+        set {
+            list.pastesNewestFirst = newValue
+            lineUpNext()
+        }
+    }
+
+    @ObservationIgnored private weak var appState: AppState?
+    @ObservationIgnored private let board = ClipQueuePasteboard()
+    @ObservationIgnored private var activationObserver: NSObjectProtocol?
+    /// What the clipboard promises right now, kept so stopping can write it for real.
+    @ObservationIgnored private var placed: ClipboardItem?
+    @ObservationIgnored private let window = ClipQueueWindowController()
+
+    func attach(to appState: AppState) {
+        self.appState = appState
+        board.onPaste = { [weak self] in self?.userDidPaste() }
+        board.onReplace = { [weak self] in
+            // Something copied since then wins; Clidock records it and the
+            // queue lines up again from there.
+            guard let self, self.board.holdsQueueItem else { return }
+            self.lineUpNext()
+        }
+    }
+
+    func toggle() {
+        if isActive { stop() } else { start() }
+    }
+
+    func start() {
+        guard !isActive else { return }
+        isActive = true
+        list.removeAll()
+        observeActivations()
+        window.show(queue: self)
+    }
+
+    func stop() {
+        guard isActive else { return }
+        isActive = false
+        if board.ownsClipboard {
+            // Leave real data behind, not a promise nobody will keep: the newest
+            // clip in history, so the next ⌘V pastes what tops the history list
+            // rather than whatever the queue had lined up next.
+            /// What the clipboard holds once the queue ends.
+            let restored = appState?.clipboardMonitor.newestItem() ?? placed
+            if let restored { write(restored) }
+        }
+        board.reset()
+        placed = nil
+        list.removeAll()
+        if let activationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(activationObserver)
+        }
+        activationObserver = nil
+        window.hide()
+    }
+
+    /// A copy Clidock just recorded.
+    func capture(_ item: ClipboardItem) {
+        guard isActive else { return }
+        // A snapshot, so pruning or deleting history can't pull the model out
+        // from under the list.
+        list.append(item.detachedCopy())
+        // Even when the new copy is next, it has to go back on as a promise,
+        // or its paste would go unnoticed.
+        lineUpNext()
+    }
+
+    /// Moves an entry into another's place in paste order.
+    /// - Parameters:
+    ///   - id: the entry being moved
+    ///   - targetID: the entry whose place it takes
+    func move(id: UUID, to targetID: UUID) {
+        /// The entry due next before the move.
+        let previousNext = list.next?.id
+        list.move(id: id, to: targetID)
+        // A different entry is due next: put it on the clipboard instead.
+        if list.next?.id != previousNext { lineUpNext() }
+    }
+
+    /// Puts an entry pasted earlier back in the queue, as the next one to paste.
+    /// - Parameter id: the pasted entry
+    func restore(id: UUID) {
+        list.restore(id: id)
+        lineUpNext()
+    }
+
+    func remove(id: UUID) {
+        let wasNext = list.next?.id == id
+        list.remove(id: id)
+        if wasNext { lineUpNext() }
+    }
+
+    // MARK: - Clipboard
+
+    private var asPlainText: Bool {
+        UserDefaults.standard.bool(forKey: PasteService.alwaysPlainTextDefaultsKey)
+    }
+
+    private func lineUpNext() {
+        guard isActive, let next = list.next, let appState else { return }
+        board.place(appState.pasteService.contents(for: next.item, asPlainText: asPlainText))
+        placed = next.item
+    }
+
+    private func write(_ item: ClipboardItem) {
+        guard let appState else { return }
+        appState.pasteService.write(item: item, asPlainText: asPlainText)
+    }
+
+    private func userDidPaste() {
+        guard isActive, list.consumeNext() != nil else { return }
+        // Don't write over something copied right after the paste.
+        guard board.holdsQueueItem else { return }
+        lineUpNext()
+    }
+
+    private func observeActivations() {
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.board.noteActivation()
+            }
+        }
+    }
+}
+
+extension ClipboardItem {
+    /// An unmanaged copy with the same content, safe to keep after the
+    /// original is deleted from history.
+    func detachedCopy() -> ClipboardItem {
+        let copy = ClipboardItem(
+            contentType: contentType,
+            rawData: rawData,
+            textContent: textContent,
+            thumbnailData: thumbnailData,
+            sourceAppName: sourceAppName,
+            sourceAppBundleId: sourceAppBundleId,
+            contentHash: contentHash
+        )
+        copy.userTitle = userTitle
+        copy.copiedAt = copiedAt
+        return copy
+    }
+}

@@ -1,0 +1,222 @@
+import SwiftUI
+
+enum AppTheme: String, CaseIterable {
+    case system = "System"
+    case light = "Light"
+    case dark = "Dark"
+
+    /// Localized label. `rawValue` is what is stored in UserDefaults.
+    var displayName: String {
+        switch self {
+        case .system: String(localized: "System")
+        case .light: String(localized: "Light")
+        case .dark: String(localized: "Dark")
+        }
+    }
+}
+
+@MainActor
+struct AppearanceSettingsTab: View {
+    /// Shared settings observed by open cards as a color changes.
+    @Environment(AppState.self) private var appState
+    /// Resolves a picker's selection using the appearance shown in this window.
+    @Environment(\.self) private var environment
+    @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
+    @AppStorage(PanelController.animatesPanelDefaultsKey) private var animatesPanel: Bool = true
+    @State private var reducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    /// System Reduce Transparency, which makes the panel solid and turns off
+    /// Background Transparency.
+    @State private var reducesTransparency = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    /// Share of the screen width the panel takes, in percent.
+    @AppStorage(PanelWidth.defaultsKey) private var panelWidth: Double = PanelWidth.defaultValue
+    /// Panel height, which sets the card size.
+    @AppStorage(PanelCardSize.defaultsKey) private var panelHeight: Double = PanelCardSize.defaultValue
+    /// Which display the panel opens on.
+    @AppStorage(PanelScreen.defaultsKey) private var panelScreen: PanelScreen = .pointer
+    /// Panel background, from the standard blur (0) to clear (1).
+    @AppStorage(PanelBackgroundTransparency.defaultsKey)
+    private var backgroundTransparency: Double = PanelBackgroundTransparency.defaultValue
+
+    var body: some View {
+        form
+            .onAppear { applyTheme(appTheme) }
+    }
+
+    /// The settings, in grouped boxes.
+    private var form: some View {
+        Form {
+            Picker("Theme", selection: $appTheme) {
+                ForEach(AppTheme.allCases, id: \.rawValue) { theme in
+                    Text(theme.displayName).tag(theme.rawValue)
+                }
+            }
+            .pickerStyle(.menu)
+            .onChange(of: appTheme) { _, newValue in
+                applyTheme(newValue)
+            }
+
+            Toggle(isOn: $animatesPanel) {
+                Text("Animate Panel")
+                if reducesMotion {
+                    Text("Off while Reduce Motion is on in System Settings > Accessibility > Display.")
+                } else {
+                    Text("Slide the history panel in and out. When off, it appears and closes at once.")
+                }
+            }
+            .disabled(reducesMotion)
+            .onReceive(NSWorkspace.shared.notificationCenter.publisher(
+                for: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification
+            )) { _ in
+                reducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                reducesTransparency = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+            }
+
+            Section {
+                SettingsSliderRow(
+                    title: "Panel Width",
+                    value: $panelWidth,
+                    range: PanelWidth.range,
+                    step: PanelWidth.step,
+                    valueText: (panelWidth / 100).formatted(.percent.precision(.fractionLength(0)))
+                )
+                SettingsSliderRow(
+                    title: "Card Size",
+                    value: $panelHeight,
+                    range: PanelCardSize.range,
+                    step: PanelCardSize.step,
+                    // Card size relative to the default.
+                    valueText: (panelHeight / PanelCardSize.defaultValue)
+                        .formatted(.percent.precision(.fractionLength(0)))
+                )
+                Picker("Show Panel On", selection: $panelScreen) {
+                    ForEach(PanelScreen.allCases, id: \.self) { screen in
+                        Text(screen.displayName).tag(screen)
+                    }
+                }
+                .pickerStyle(.menu)
+                SettingsSliderRow(
+                    title: "Background Transparency",
+                    value: $backgroundTransparency,
+                    range: PanelBackgroundTransparency.range,
+                    step: PanelBackgroundTransparency.step,
+                    valueText: backgroundTransparency.formatted(.percent.precision(.fractionLength(0)))
+                )
+                .disabled(reducesTransparency)
+                if reducesTransparency {
+                    Text("Off while Reduce Transparency is on in System Settings > Accessibility > Display.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Panel")
+            } footer: {
+                Text("Width, card size and transparency update an open panel right away. The screen applies the next time the panel opens.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ForEach(ContentType.allCases, id: \.self) { type in
+                    cardColorRow(for: type)
+                }
+            } header: {
+                Text("Card Header Colors")
+            } footer: {
+                HStack {
+                    Spacer()
+                    Button("Restore All Appearance Defaults") { restoreDefaults() }
+                        .disabled(isAtDefaults)
+                }
+            }
+        }
+    }
+
+    /// - Parameter type: The type whose header the picker and reset button edit.
+    private func cardColorRow(for type: ContentType) -> some View {
+        // The default for a color clip is its own copied swatch.
+        let palette = appState.cardColors
+        /// Name the type in the reset action for VoiceOver as well as the tooltip.
+        let resetTitle = String(localized: "Restore Default Color for \(type.displayName)")
+        return LabeledContent {
+            HStack(spacing: 8) {
+                ColorPicker(type.displayName, selection: Binding(
+                    get: { palette.header(for: type).background },
+                    set: { palette[type] = $0.resolve(in: environment) }
+                ), supportsOpacity: false)
+                .labelsHidden()
+                Button(resetTitle, systemImage: "arrow.counterclockwise") { palette[type] = nil }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .help(resetTitle)
+                    .disabled(palette[type] == nil)
+            }
+        } label: {
+            Text(type.displayName)
+            if type == .color && palette[type] == nil {
+                Text("Uses the copied color by default.")
+            }
+        }
+    }
+
+    /// Whether every setting on this tab already has its default value.
+    private var isAtDefaults: Bool {
+        appTheme == AppTheme.system.rawValue
+            && animatesPanel
+            && panelWidth == PanelWidth.defaultValue
+            && panelHeight == PanelCardSize.defaultValue
+            && panelScreen == .pointer
+            && backgroundTransparency == PanelBackgroundTransparency.defaultValue
+            && appState.cardColors.isAtDefaults
+    }
+
+    /// Puts every setting on this tab back to its default. Assigned rather
+    /// than removed from UserDefaults so the theme's `onChange` applies it and
+    /// an open panel resizes at once.
+    private func restoreDefaults() {
+        appTheme = AppTheme.system.rawValue
+        animatesPanel = true
+        panelWidth = PanelWidth.defaultValue
+        panelHeight = PanelCardSize.defaultValue
+        panelScreen = .pointer
+        backgroundTransparency = PanelBackgroundTransparency.defaultValue
+        appState.cardColors.restoreDefaults()
+    }
+
+    private func applyTheme(_ theme: String) {
+        switch AppTheme(rawValue: theme) {
+        case .light:
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark:
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        default:
+            NSApp.appearance = nil
+        }
+    }
+}
+
+/// A settings row with a label, a slider and its current value.
+private struct SettingsSliderRow: View {
+    /// Row label.
+    let title: LocalizedStringKey
+    /// The stored value the slider edits.
+    @Binding var value: Double
+    /// Slider bounds.
+    let range: ClosedRange<Double>
+    /// Slider increment.
+    let step: Double
+    /// The value as shown next to the slider.
+    let valueText: String
+
+    var body: some View {
+        LabeledContent(title) {
+            HStack(spacing: 8) {
+                Slider(value: $value, in: range, step: step)
+                    .frame(width: 180)
+                Text(valueText)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 44, alignment: .trailing)
+            }
+        }
+    }
+}

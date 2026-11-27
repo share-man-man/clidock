@@ -1,0 +1,109 @@
+name: Clidock
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+  defaultConfig: Release
+configs:
+  Debug: debug
+  Local: release
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    exactVersion: "3.1.0"
+targets:
+  Clidock:
+    type: application
+    platform: macOS
+    sources:
+      - Clidock
+      - path: LICENSE
+        buildPhase: resources
+      - path: Licenses/KeyboardShortcuts.txt
+        buildPhase: resources
+    settings:
+      base:
+        CLIDOCK_BASE_IDENTIFIER: io.github.share-man-man.clidock
+        PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER)
+        PRODUCT_MODULE_NAME: Clidock
+        CLIDOCK_URL_SCHEME: clidock
+        CLIDOCK_MENU_BADGE: ""
+        CLIDOCK_MENU_BANNER: ""
+        INFOPLIST_FILE: Clidock/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_IDENTITY: "-"
+      configs:
+        Debug:
+          PRODUCT_NAME: ClidockDev
+          PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER).dev
+          CLIDOCK_URL_SCHEME: clidock-dev
+          CLIDOCK_MENU_BADGE: DEV
+          CLIDOCK_MENU_BANNER: "$(PRODUCT_NAME) · $(CLIDOCK_MENU_BADGE)"
+        Local:
+          PRODUCT_NAME: ClidockLocal
+          PRODUCT_BUNDLE_IDENTIFIER: $(CLIDOCK_BASE_IDENTIFIER).local
+          CLIDOCK_URL_SCHEME: clidock-local
+          CLIDOCK_MENU_BANNER: "$(PRODUCT_NAME) · LOCAL"
+    dependencies:
+      - package: KeyboardShortcuts
+  ClidockTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+      - path: Clidock/Utilities/CardColors.swift
+      - path: Clidock/Utilities/DesignTokens.swift
+      - path: Clidock/Utilities/PanelTabShortcut.swift
+      - path: Clidock/Utilities/WheelScrollTranslation.swift
+      - path: Clidock/Panel/PanelContentContainer.swift
+      - path: Clidock/Utilities/PasteKeyCode.swift
+      - path: Clidock/Utilities/ClipQueueList.swift
+      - path: Clidock/Services/ContentTypeClassifier.swift
+      - path: Clidock/Models/FileClip.swift
+      - path: Clidock/Utilities/FileImageThumbnail.swift
+      - path: Clidock/Services/PasteService.swift
+      - path: Clidock/SearchState.swift
+      - path: Clidock/Services/ClipQueuePasteboard.swift
+      - path: Clidock/Utilities/OwnPasteboardWrite.swift
+      - path: Clidock/Utilities/ClipQueueWindowGeometry.swift
+      - path: Clidock/Utilities/RepeatedPressFilter.swift
+      - path: Clidock/Utilities/HistoryRetention.swift
+      - path: Clidock/Utilities/ListDragAutoScroll.swift
+      - path: Clidock/Utilities/PointerDrag.swift
+      - path: Clidock/Utilities/URLCommand.swift
+      - path: Clidock/Utilities/Bundle+BuildInfo.swift
+      - path: Clidock/Services/ClipUndoStack.swift
+      - path: Clidock/Models/ClipboardItem.swift
+      - path: Clidock/Models/Pinboard.swift
+      - path: Clidock/Models/PinboardEntry.swift
+      - path: Clidock/Models/ContentType.swift
+      - path: Clidock/AppIdentity.swift
+      - path: Clidock/Models/ExcludedApp.swift
+      - path: Clidock/Utilities/Logger+Clidock.swift
+      - path: Clidock/Services/StoreManager.swift
+      - path: Clidock/Services/TransferService.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.share-man-man.clidock.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Clidock:
+    build:
+      targets:
+        Clidock: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ClidockTests
+    archive:
+      config: Release
