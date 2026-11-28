@@ -1,0 +1,6 @@
+// Default to ad-hoc signing so CI and fresh clones build without a certificate.
+// Create a gitignored Config/LocalSigning.xcconfig to sign Debug/Local with your
+// own Apple Development certificate so macOS TCC permissions survive rebuilds.
+CODE_SIGN_IDENTITY = -
+
+#include? "LocalSigning.xcconfig"

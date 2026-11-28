@@ -3,3 +3,4 @@
 /dist/
 *.xcodeproj/
 *.xcresult/
+Config/LocalSigning.xcconfig
