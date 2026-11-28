@@ -18,6 +18,10 @@ enum DirectPaste {
         UserDefaults.standard.bool(forKey: enabledDefaultsKey)
     }
 
+    static func setEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: enabledDefaultsKey)
+    }
+
     /// Reads the Accessibility grant live. `CGPreflightPostEventAccess` kept
     /// answering true inside a running process after the grant was removed in
     /// System Settings, so the settings warning never appeared and ⌘V was
@@ -43,6 +47,14 @@ enum DirectPaste {
             return
         }
         NSWorkspace.shared.open(url)
+    }
+
+    /// Prompts for Accessibility permission and opens System Settings directly
+    /// to the Accessibility list, since macOS may suppress repeat system prompts
+    /// after permission was manually toggled off.
+    static func openAccessibilitySettingsWithPrompt() {
+        requestPermission()
+        openAccessibilitySettings()
     }
 
     /// Sends ⌘V to whichever app has keyboard focus. Call only after the

@@ -1,14 +1,11 @@
-// Modified for Popback on 2026-11-27. SPDX-License-Identifier: GPL-3.0-only
-import Combine
+// Modified for Popback on 2026-11-28. SPDX-License-Identifier: GPL-3.0-only
 import SwiftUI
 
 @MainActor
 struct PastingSettingsTab: View {
+    @Environment(AppState.self) private var appState
     @AppStorage(PasteService.alwaysPlainTextDefaultsKey) private var alwaysPastePlainText: Bool = false
     @AppStorage(DirectPaste.enabledDefaultsKey) private var pasteIntoActiveApp: Bool = false
-    @State private var hasPastePermission = DirectPaste.hasPermission
-    /// Permission is granted in System Settings, outside the app, so poll while visible.
-    private let permissionTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Form {
@@ -28,14 +25,13 @@ struct PastingSettingsTab: View {
                     if isOn, !DirectPaste.hasPermission {
                         DirectPaste.requestPermission()
                     }
-                    hasPastePermission = DirectPaste.hasPermission
+                    appState.directPastePermission.refresh(force: true)
                 }
 
-                if pasteIntoActiveApp, !hasPastePermission {
+                if pasteIntoActiveApp, !appState.directPastePermission.hasPermission {
                     LabeledContent {
                         Button("Open Accessibility Settings\u{2026}") {
-                            DirectPaste.requestPermission()
-                            DirectPaste.openAccessibilitySettings()
+                            DirectPaste.openAccessibilitySettingsWithPrompt()
                         }
                     } label: {
                         Label("Accessibility permission is off, so clips are only copied.", systemImage: "exclamationmark.triangle.fill")
@@ -45,10 +41,11 @@ struct PastingSettingsTab: View {
                 }
             }
         }
-        .onReceive(permissionTimer) { _ in
-            // The user can grant or revoke access without closing this pane.
-            let current = DirectPaste.hasPermission
-            if current != hasPastePermission { hasPastePermission = current }
+        // DirectPastePermissionMonitor updates live via the debounced
+        // `com.apple.accessibility.api` notification; avoid a tight polling loop
+        // that could query `AXIsProcessTrusted()` mid-commit and poison HIServices's cache.
+        .onAppear {
+            appState.directPastePermission.refresh()
         }
     }
 }

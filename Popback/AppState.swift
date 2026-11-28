@@ -26,6 +26,7 @@ final class AppState {
     /// Set while the queue shortcut waits to be let go before starting the queue.
     @ObservationIgnored private var isStartingClipQueue = false
     let clipUndo = ClipUndoStack()
+    let directPastePermission = DirectPastePermissionMonitor()
 
     var selectedTab: PanelTab = .history
     /// Published by NavigationBarView so shortcuts follow its exact display order.
@@ -80,6 +81,7 @@ final class AppState {
             self?.previewItem = nil
         }
         setupHotkey()
+        directPastePermission.start()
 
         // Render the panel once off screen so the first hotkey press is instant.
         Task { @MainActor [weak self] in
@@ -93,6 +95,7 @@ final class AppState {
     /// - Parameter toggleIfVisible: Allows the shortcut to close history on that display.
     func openPanel(toggleIfVisible: Bool = false) {
         guard let container = modelContainer else { return }
+        directPastePermission.refresh()
         panelController.present(modelContainer: container, appState: self, toggleIfVisible: toggleIfVisible)
     }
 
@@ -150,11 +153,41 @@ final class AppState {
         SoundFeedback.playPaste()
         // ⌘V has to reach the app behind the panel, so send it once the
         // panel is off screen and no longer the key window.
-        if DirectPaste.isReady {
+        directPastePermission.refresh(force: true)
+        if directPastePermission.isReady {
             hidePanel(then: { _ = DirectPaste.sendPasteShortcut() })
+        } else if directPastePermission.consumePastePrompt() {
+            hidePanel(then: { [weak self] in
+                self?.presentDirectPastePermissionAlert()
+            })
         } else {
             hidePanel()
         }
+    }
+
+    // MARK: - Direct Paste Guidance
+
+    /// Closes the panel if visible and opens System Settings > Accessibility.
+    func openDirectPasteAccessibilitySettings() {
+        let open: @MainActor @Sendable () -> Void = {
+            DirectPaste.openAccessibilitySettingsWithPrompt()
+        }
+        if panelController.isVisible {
+            hidePanel(then: open)
+        } else {
+            open()
+        }
+    }
+
+    private func presentDirectPastePermissionAlert() {
+        DirectPastePermissionAlert.present(
+            onOpenSettings: { [weak self] in
+                self?.openDirectPasteAccessibilitySettings()
+            },
+            onTurnOff: { [weak self] in
+                self?.directPastePermission.disableDirectPaste()
+            }
+        )
     }
 
     // MARK: - Deleting with undo (#45)

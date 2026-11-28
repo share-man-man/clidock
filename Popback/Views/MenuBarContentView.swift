@@ -18,6 +18,15 @@ struct MenuBarContentView: View {
             Divider()
         }
 
+        if appState.directPastePermission.needsAttention {
+            Button {
+                appState.openDirectPasteAccessibilitySettings()
+            } label: {
+                Label("Direct Paste Needs Accessibility\u{2026}", systemImage: "exclamationmark.triangle.fill")
+            }
+            Divider()
+        }
+
         Section("Recent Copies") {
             if recentItems.isEmpty {
                 Text("No clipboard history")

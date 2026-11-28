@@ -156,6 +156,8 @@ enum DesignTokens {
 
     enum Nav {
         static let height: CGFloat = 44
+        /// Height of the inline warning bar shown below the nav bar when Direct Paste lacks Accessibility.
+        static let bannerHeight: CGFloat = 32
         static let horizontalPadding: CGFloat = 16
         /// Gap between the search field, toolbar dividers, tab row and action
         /// buttons: the standard 8pt spacing between related macOS controls.

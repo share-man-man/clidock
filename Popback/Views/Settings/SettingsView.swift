@@ -76,6 +76,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
 /// Sidebar navigation for the native Settings window.
 @MainActor
 struct SettingsView: View {
+    @Environment(AppState.self) private var appState
     @Environment(\.locale) private var locale
     @State private var search = ""
     /// Panes visited in order, including forward history after a back navigation.
@@ -104,12 +105,21 @@ struct SettingsView: View {
     var body: some View {
         NavigationSplitView {
             List(matchingPanes, selection: selection) { pane in
-                Label {
-                    Text(pane.title)
-                } icon: {
-                    Image(systemName: pane.sidebarIcon.name)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(pane.sidebarIcon.tint)
+                HStack(spacing: 6) {
+                    Label {
+                        Text(pane.title)
+                    } icon: {
+                        Image(systemName: pane.sidebarIcon.name)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(pane.sidebarIcon.tint)
+                    }
+                    if pane == .pasting, appState.directPastePermission.needsAttention {
+                        Spacer(minLength: 4)
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.orange)
+                            .help(String(localized: "Accessibility permission is off, so clips are only copied."))
+                    }
                 }
                 .tag(pane)
             }
@@ -147,6 +157,9 @@ struct SettingsView: View {
         }
         .frame(minWidth: 670, minHeight: 500)
         .background(SettingsWindowReader())
+        .onAppear {
+            appState.directPastePermission.refresh()
+        }
     }
 
     /// Opens a pane and drops any forward history after branching.

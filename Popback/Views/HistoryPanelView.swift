@@ -26,6 +26,16 @@ struct HistoryPanelView: View {
             VStack(spacing: 0) {
                 NavigationBarView()
 
+                if appState.directPastePermission.showsPanelBanner {
+                    DirectPastePermissionBanner(
+                        colorScheme: colorScheme,
+                        onOpenSettings: { appState.openDirectPasteAccessibilitySettings() },
+                        onTurnOff: { appState.directPastePermission.disableDirectPaste() },
+                        onDismiss: { appState.directPastePermission.dismissPanelBanner() }
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
                 ZStack {
                     // Cards layer
                     Group {
@@ -66,17 +76,89 @@ struct HistoryPanelView: View {
                 appState.selectForPreview(nil)
             }
             if let toast = appState.panelToast {
-                PanelToastView(toast: toast)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .zIndex(10)
+                PanelToastView(
+                    toast: toast,
+                    topInset: DesignTokens.Nav.height
+                        + (appState.directPastePermission.showsPanelBanner ? DesignTokens.Nav.bannerHeight : 0)
+                        + 8
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(10)
             }
         }
         .animation(.easeOut(duration: 0.16), value: appState.panelToast)
+        .animation(.easeOut(duration: 0.16), value: appState.directPastePermission.showsPanelBanner)
+    }
+}
+
+private struct DirectPastePermissionBanner: View {
+    let colorScheme: ColorScheme
+    let onOpenSettings: () -> Void
+    let onTurnOff: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.orange)
+
+            Text("Direct paste needs Accessibility permission. Clips are only copied.")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(DesignTokens.Nav.activeTextColor(for: colorScheme))
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer(minLength: 8)
+
+            Button("Open Settings\u{2026}", action: onOpenSettings)
+                .buttonStyle(.plain)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(.orange)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3.5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.orange.opacity(colorScheme == .dark ? 0.22 : 0.15))
+                )
+                .fixedSize()
+
+            Button("Turn Off", action: onTurnOff)
+                .buttonStyle(.plain)
+                .font(.system(size: 11.5, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3.5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(DesignTokens.Nav.activeBackground(for: colorScheme))
+                )
+                .fixedSize()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Dismiss")
+        }
+        .padding(.horizontal, DesignTokens.Nav.horizontalPadding)
+        .frame(height: DesignTokens.Nav.bannerHeight)
+        .background(Color.orange.opacity(colorScheme == .dark ? 0.13 : 0.09))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.orange.opacity(colorScheme == .dark ? 0.22 : 0.16))
+                .frame(height: 0.75)
+        }
     }
 }
 
 private struct PanelToastView: View {
     let toast: PanelToast
+    let topInset: CGFloat
 
     var body: some View {
         HStack(spacing: 7) {
@@ -98,7 +180,7 @@ private struct PanelToastView: View {
         )
         .shadow(color: .black.opacity(0.16), radius: 10, y: 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(.top, DesignTokens.Nav.height + 8)
+        .padding(.top, topInset)
         .allowsHitTesting(false)
     }
 }
