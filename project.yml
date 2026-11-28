@@ -70,6 +70,7 @@ targets:
       - path: Popback/Panel/PanelContentContainer.swift
       - path: Popback/Utilities/PasteKeyCode.swift
       - path: Popback/Utilities/DirectPastePermissionGuide.swift
+      - path: Popback/Utilities/LocalStateReset.swift
       - path: Popback/Utilities/ClipQueueList.swift
       - path: Popback/Services/ContentTypeClassifier.swift
       - path: Popback/Models/FileClip.swift

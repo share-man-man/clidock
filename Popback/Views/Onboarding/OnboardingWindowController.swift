@@ -10,7 +10,7 @@ import SwiftData
 final class OnboardingWindowController: NSObject, NSWindowDelegate {
     static let shared = OnboardingWindowController()
 
-    static let completedDefaultsKey = "hasCompletedOnboarding"
+    static let completedDefaultsKey = LocalStateReset.onboardingCompletedKey
 
     private var window: NSWindow?
 

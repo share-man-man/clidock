@@ -4,7 +4,12 @@ import AppKit
 @MainActor
 struct PasteService {
 
-    private static let tempDir = NSTemporaryDirectory() + "Popback/"
+    private nonisolated static let tempDir = NSTemporaryDirectory() + "Popback/"
+
+    /// Directory holding temporary PNGs created when pasting or dragging images.
+    nonisolated static var tempDirectoryURL: URL {
+        URL(fileURLWithPath: tempDir, isDirectory: true)
+    }
 
     /// Backing key for the "Always Paste as Plain Text" setting (Settings > Pasting).
     nonisolated static let alwaysPlainTextDefaultsKey = "alwaysPastePlainText"

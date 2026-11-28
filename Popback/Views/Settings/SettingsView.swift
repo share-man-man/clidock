@@ -54,7 +54,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .shortcuts:
             return ["Toggle History Panel", "Start or End Clip Queue", "Clear All History", "Quick Look Preview", "First 8 Pinboards", "Copy Selection When Starting"]
         case .about:
-            return ["Show Welcome Tour…", "View Releases…"]
+            return ["Show Welcome Tour…", "View Releases…", "Maintenance", "Reset Prompts & Cache"]
         }
     }
 

@@ -110,6 +110,20 @@ final class DirectPastePermissionMonitor {
         refresh(force: true)
     }
 
+    /// Resets prompt flags, onboarding state, saved Clip Queue window geometry,
+    /// and temporary files via `LocalStateReset`.
+    func resetLocalState(
+        defaults: UserDefaults = .standard,
+        tempDirectory: URL? = PasteService.tempDirectoryURL
+    ) {
+        LocalStateReset.reset(
+            guide: &guide,
+            defaults: defaults,
+            tempDirectory: tempDirectory
+        )
+        refresh(force: true)
+    }
+
     private func scheduleSettleRefresh() {
         settleTask?.cancel()
         settleTask = Task { @MainActor [weak self] in

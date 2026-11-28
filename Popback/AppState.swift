@@ -165,7 +165,7 @@ final class AppState {
         }
     }
 
-    // MARK: - Direct Paste Guidance
+    // MARK: - Direct Paste Guidance & Local State Maintenance
 
     /// Closes the panel if visible and opens System Settings > Accessibility.
     func openDirectPasteAccessibilitySettings() {
@@ -177,6 +177,16 @@ final class AppState {
         } else {
             open()
         }
+    }
+
+    /// Resets dismissible prompts, onboarding status, saved Clip Queue window
+    /// geometry, temporary image files, and in-memory caches. Leaves clipboard
+    /// history, pinboards, excluded apps, and user preferences untouched.
+    func resetPromptsAndCache() {
+        directPastePermission.resetLocalState()
+        ThumbnailImageCache.clear()
+        AppIconProvider.clear()
+        ClipMetadata.clear()
     }
 
     private func presentDirectPastePermissionAlert() {

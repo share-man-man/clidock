@@ -52,6 +52,12 @@ enum ClipMetadata {
         return info
     }
 
+    /// Clears cached image and file facts so they are re-read on demand.
+    static func clear() {
+        imageInfoCache.removeAll()
+        fileInfoCache.removeAll()
+    }
+
     /// - Parameter data: Encoded image data (PNG, JPEG, TIFF, HEIC...).
     private static func readImageInfo(from data: Data) -> ImageInfo? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),

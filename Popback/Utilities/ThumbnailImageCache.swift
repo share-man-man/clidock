@@ -20,4 +20,8 @@ struct ThumbnailImageCache {
         cache.setObject(image, forKey: cacheKey, cost: data.count)
         return image
     }
+
+    static func clear() {
+        cache.removeAllObjects()
+    }
 }

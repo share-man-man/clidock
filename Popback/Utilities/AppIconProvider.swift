@@ -25,4 +25,8 @@ struct AppIconProvider {
         cache.setObject(icon, forKey: cacheKey)
         return icon
     }
+
+    static func clear() {
+        cache.removeAllObjects()
+    }
 }
