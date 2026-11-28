@@ -77,8 +77,7 @@ final class AppState {
         }
         clipboardMonitor.start(modelContext: modelContext)
         panelController.onPanelWillHide = { [weak self] in
-            self?.searchState.reset()
-            self?.previewItem = nil
+            self?.clearTransientPanelState()
         }
         setupHotkey()
         directPastePermission.start()
@@ -155,13 +154,13 @@ final class AppState {
         // panel is off screen and no longer the key window.
         directPastePermission.refresh(force: true)
         if directPastePermission.isReady {
-            hidePanel(then: { _ = DirectPaste.sendPasteShortcut() })
+            hidePanel(resetState: true, then: { _ = DirectPaste.sendPasteShortcut() })
         } else if directPastePermission.consumePastePrompt() {
-            hidePanel(then: { [weak self] in
+            hidePanel(resetState: true, then: { [weak self] in
                 self?.presentDirectPastePermissionAlert()
             })
         } else {
-            hidePanel()
+            hidePanel(resetState: true)
         }
     }
 
@@ -269,7 +268,21 @@ final class AppState {
         return true
     }
 
-    func hidePanel(then completion: (@MainActor @Sendable () -> Void)? = nil) {
+    /// Hides the panel, clearing transient UI state while keeping search, tab,
+    /// and selection intact unless `resetState` is true (used after pasting).
+    func hidePanel(
+        resetState: Bool = false,
+        then completion: (@MainActor @Sendable () -> Void)? = nil
+    ) {
+        clearTransientPanelState()
+        if resetState {
+            searchState.reset()
+            selectedTab = .history
+        }
+        panelController.hidePanel(then: completion)
+    }
+
+    private func clearTransientPanelState() {
         previewItem = nil
         hoveredClipID = nil
         draggedPinboardEntry = nil
@@ -277,9 +290,6 @@ final class AppState {
         panelToast = nil
         toastTask?.cancel()
         draggedClipboardItemID = nil
-        searchState.reset()
-        selectedTab = .history
-        panelController.hidePanel(then: completion)
     }
 
     /// Opens Settings in front, closing the panel first if it is open.
