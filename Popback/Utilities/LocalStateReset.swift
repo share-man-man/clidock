@@ -13,6 +13,8 @@ enum LocalStateReset {
         onboardingCompletedKey,
         ClipQueuePlacement.defaultsKey,
         ClipQueueWindowSize.defaultsKey,
+        AppUpdateDefaults.lastCheckDateKey,
+        AppUpdateDefaults.skippedVersionKey,
     ]
 
     /// Clears prompt flags, local window/onboarding defaults, and temporary files.

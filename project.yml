@@ -92,6 +92,7 @@ targets:
       - path: Popback/Models/PinboardEntry.swift
       - path: Popback/Models/ContentType.swift
       - path: Popback/AppIdentity.swift
+      - path: Popback/Utilities/AppUpdateLogic.swift
       - path: Popback/Models/ExcludedApp.swift
       - path: Popback/Utilities/Logger+Popback.swift
       - path: Popback/Services/StoreManager.swift

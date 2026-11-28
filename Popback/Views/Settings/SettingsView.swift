@@ -2,7 +2,7 @@
 import SwiftUI
 
 /// The panes of the Settings window, listed in its sidebar.
-private enum SettingsPane: String, CaseIterable, Identifiable {
+enum SettingsPane: String, CaseIterable, Identifiable {
     case general
     case pasting
     case privacy
@@ -54,7 +54,10 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
         case .shortcuts:
             return ["Toggle History Panel", "Start or End Clip Queue", "Clear All History", "Quick Look Preview", "First 8 Pinboards", "Copy Selection When Starting"]
         case .about:
-            return ["Show Welcome Tour…", "View Releases…", "Maintenance", "Reset Prompts & Cache"]
+            return [
+                "Show Welcome Tour…", "Updates", "Software Update", "Check for Updates…",
+                "Automatically check for updates", "Maintenance", "Reset Prompts & Cache"
+            ]
         }
     }
 
@@ -119,6 +122,12 @@ struct SettingsView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(.orange)
                             .help(String(localized: "Accessibility permission is off, so clips are only copied."))
+                    } else if pane == .about, appState.updater.availableUpdate != nil {
+                        Spacer(minLength: 4)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.blue)
+                            .help(String(localized: "An update for Popback is available."))
                     }
                 }
                 .tag(pane)
@@ -159,7 +168,18 @@ struct SettingsView: View {
         .background(SettingsWindowReader())
         .onAppear {
             appState.directPastePermission.refresh()
+            consumeRequestedPane()
         }
+        .onChange(of: appState.requestedSettingsPane) { _, _ in
+            consumeRequestedPane()
+        }
+    }
+
+    private func consumeRequestedPane() {
+        guard let target = appState.requestedSettingsPane else { return }
+        appState.requestedSettingsPane = nil
+        if !matchingPanes.contains(target) { search = "" }
+        visit(target)
     }
 
     /// Opens a pane and drops any forward history after branching.

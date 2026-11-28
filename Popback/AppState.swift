@@ -27,6 +27,7 @@ final class AppState {
     @ObservationIgnored private var isStartingClipQueue = false
     let clipUndo = ClipUndoStack()
     let directPastePermission = DirectPastePermissionMonitor()
+    let updater = AppUpdater()
 
     var selectedTab: PanelTab = .history
     /// Published by NavigationBarView so shortcuts follow its exact display order.
@@ -60,6 +61,8 @@ final class AppState {
     @ObservationIgnored private var hasStarted = false
     /// Settings > General > Show Icon in Menu Bar. Missing means on (#25).
     nonisolated static let showsMenuBarIconDefaultsKey = "showMenuBarIcon"
+    /// Requested Settings sidebar pane to jump to when Settings opens or is already open.
+    var requestedSettingsPane: SettingsPane?
     /// SwiftUI's `openSettings`, captured from the panel's content (built at
     /// launch) so AppKit paths can open Settings without the menu bar item:
     /// reopening the app and the panel's Settings item.
@@ -87,6 +90,12 @@ final class AppState {
             try? await Task.sleep(for: .milliseconds(300))
             guard let self, let container = self.modelContainer else { return }
             self.panelController.prewarm(modelContainer: container, appState: self)
+        }
+
+        // Opt-in daily update check after launch settles (off by default).
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            self?.updater.performBackgroundCheckIfEnabled()
         }
     }
 
@@ -290,6 +299,16 @@ final class AppState {
         panelToast = nil
         toastTask?.cancel()
         draggedClipboardItemID = nil
+    }
+
+    /// Opens Settings directly to the About pane and triggers an update check when needed.
+    func checkForUpdates() {
+        requestedSettingsPane = .about
+        openSettings()
+        if case .available = updater.state {
+            return
+        }
+        updater.checkForUpdates(userInitiated: true)
     }
 
     /// Opens Settings in front, closing the panel first if it is open.

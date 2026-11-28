@@ -56,8 +56,21 @@ struct MenuBarContentView: View {
 
         Divider()
 
-        Button("View Releases…") {
-            NSWorkspace.shared.open(AppIdentity.releasesURL)
+        Button {
+            appState.requestedSettingsPane = .about
+            openSettings()
+            SettingsWindowFront.bring()
+            if case .available = appState.updater.state {
+                // Already fetched; show the available update directly in Settings > About.
+            } else {
+                appState.updater.checkForUpdates(userInitiated: true)
+            }
+        } label: {
+            if let version = appState.updater.availableUpdate?.version.description {
+                Label("Update Available (\(version))…", systemImage: "arrow.down.circle.fill")
+            } else {
+                Text("Check for Updates…")
+            }
         }
 
         Button("Send Feedback…") {

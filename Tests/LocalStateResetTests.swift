@@ -22,6 +22,8 @@ final class LocalStateResetTests: XCTestCase {
         XCTAssertTrue(guide.hasPromptedForRevocation)
 
         defaults.set(true, forKey: LocalStateReset.onboardingCompletedKey)
+        defaults.set(Date(), forKey: AppUpdateDefaults.lastCheckDateKey)
+        defaults.set("0.2.0", forKey: AppUpdateDefaults.skippedVersionKey)
         ClipQueuePlacement(fromLeft: true, horizontalInset: 20, topInset: 30).save(to: defaults)
         ClipQueueWindowSize.save(CGSize(width: 340, height: 380), to: defaults)
 
@@ -29,6 +31,7 @@ final class LocalStateResetTests: XCTestCase {
         defaults.set(true, forKey: "pasteIntoActiveApp")
         defaults.set("Dark", forKey: "appTheme")
         defaults.set(500, forKey: "historyLimit")
+        defaults.set(true, forKey: AppUpdateDefaults.autoCheckKey)
 
         LocalStateReset.reset(guide: &guide, defaults: defaults, tempDirectory: tempDir)
 
@@ -40,6 +43,8 @@ final class LocalStateResetTests: XCTestCase {
 
         // Local ephemeral defaults removed.
         XCTAssertNil(defaults.object(forKey: LocalStateReset.onboardingCompletedKey))
+        XCTAssertNil(defaults.object(forKey: AppUpdateDefaults.lastCheckDateKey))
+        XCTAssertNil(defaults.object(forKey: AppUpdateDefaults.skippedVersionKey))
         XCTAssertNil(ClipQueuePlacement.load(from: defaults))
         XCTAssertNil(ClipQueueWindowSize.load(minimum: CGSize(width: 240, height: 140), from: defaults))
 
@@ -51,5 +56,6 @@ final class LocalStateResetTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: "pasteIntoActiveApp"))
         XCTAssertEqual(defaults.string(forKey: "appTheme"), "Dark")
         XCTAssertEqual(defaults.integer(forKey: "historyLimit"), 500)
+        XCTAssertTrue(defaults.bool(forKey: AppUpdateDefaults.autoCheckKey))
     }
 }
